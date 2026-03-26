@@ -1,1 +1,1 @@
-worker: python3 baslat.py
+web: python3 baslat.py
