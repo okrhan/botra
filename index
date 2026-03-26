@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOTRA Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0a; color: #c9d1d9; font-family: monospace; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: #30363d; }
+@keyframes bl { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fi { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+.header { background: #0d1117; border-bottom: 1px solid #1a1f27; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+.status { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: bold; }
+.dot { width: 7px; height: 7px; border-radius: 50%; }
+.dot.canli { background: #22c55e; animation: bl 1.5s ease infinite; }
+.dot.xeta  { background: #ef4444; }
+.content { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+.grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px 20px; }
+.card-label { font-size: 10px; color: #8b949e; letter-spacing: .06em; margin-bottom: 8px; }
+.card-value { font-size: 28px; font-weight: bold; line-height: 1; }
+.grid2 { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+.pie-card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.legend { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+.legend-row { display: flex; justify-content: space-between; align-items: center; }
+.legend-dot { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; }
+.legend-name { font-size: 10px; color: #8b949e; margin-left: 5px; }
+.legend-val { font-size: 10px; font-weight: bold; color: #c9d1d9; }
+.chart-card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px 20px; }
+.chart-title { font-size: 10px; color: #8b949e; letter-spacing: .06em; margin-bottom: 12px; }
+.filters { display: flex; gap: 8px; align-items: center; }
+.filter-btn { background: transparent; border: 1px solid #21262d; color: #8b949e; border-radius: 20px; padding: 5px 14px; font-size: 11px; cursor: pointer; font-family: monospace; }
+.filter-btn.active { background: #21262d; border-color: #30363d; color: #c9d1d9; }
+.count-label { font-size: 11px; color: #30363d; margin-left: 4px; }
+.table { background: #161b22; border: 1px solid #21262d; border-radius: 10px; overflow: hidden; }
+.table-head { display: grid; grid-template-columns: 1fr 70px 70px 70px 90px 80px; gap: 12px; padding: 10px 20px; border-bottom: 1px solid #21262d; }
+.table-head span { font-size: 10px; color: #30363d; letter-spacing: 1px; text-align: right; }
+.table-head span:first-child { text-align: left; }
+.table-row { display: grid; grid-template-columns: 1fr 70px 70px 70px 90px 80px; gap: 12px; padding: 12px 20px; border-bottom: 1px solid #0d1117; align-items: center; }
+.table-row.alt { background: #0d1117; }
+.sual { font-size: 12px; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mono { font-family: monospace; text-align: right; font-size: 12px; }
+.nov-badge { font-size: 9px; padding: 2px 7px; border-radius: 20px; font-weight: bold; display: inline-block; }
+.empty { padding: 32px 20px; text-align: center; color: #30363d; font-size: 12px; }
+.info-box { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 14px 20px; }
+.info-label { font-size: 10px; color: #30363d; letter-spacing: 1px; margin-bottom: 10px; }
+.info-text { font-size: 11px; color: #8b949e; line-height: 2; }
+</style>
+</head>
+<body>
+<div class="header">
+  <svg width="140" height="44" viewBox="0 0 680 220">
+    <defs>
+      <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#C17D0A" stop-opacity="0"/>
+        <stop offset="22%" stop-color="#F5A623" stop-opacity="0.4"/>
+        <stop offset="44%" stop-color="#FFE8A0" stop-opacity="0.95"/>
+        <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="56%" stop-color="#FFE8A0" stop-opacity="0.95"/>
+        <stop offset="78%" stop-color="#F5A623" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#C17D0A" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#F5A623" stop-opacity="0"/>
+        <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#F5A623" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lg3" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#F5A623" stop-opacity="0"/>
+        <stop offset="50%" stop-color="#FFF4CC" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#F5A623" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="M 134 112 A 206 52 0 0 1 546 112" fill="none" stroke="url(#lg2)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M 134 112 A 206 52 0 0 1 546 112" fill="none" stroke="url(#lg3)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M 134 112 A 206 52 0 0 1 546 112" fill="none" stroke="url(#lg1)" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="340" y="190" font-family="Georgia, serif" font-size="92" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="14">BOTRA</text>
+  </svg>
+  <div class="status">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text" style="color:#8b949e">Yüklənir...</span>
+  </div>
+</div>
+
+<div class="content">
+  <div class="grid4">
+    <div class="card"><div class="card-label">SON SCAN</div><div class="card-value" id="son-scan" style="color:#c9d1d9;font-size:20px">--:--</div></div>
+    <div class="card"><div class="card-label">ÜMUMI SCAN</div><div class="card-value" id="scan-sayi" style="color:#3b82f6">0</div></div>
+    <div class="card"><div class="card-label">OBVIOUS NO</div><div class="card-value" id="obvious-sayi" style="color:#22c55e">0</div></div>
+    <div class="card"><div class="card-label">ARBİTRAJ</div><div class="card-value" id="arbitraj-sayi" style="color:#f59e0b">0</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="pie-card">
+      <svg id="pie-svg" width="130" height="130" viewBox="0 0 130 130"></svg>
+      <div class="legend" id="pie-legend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">FURSET TARİXİ (son 20 scan)</div>
+      <svg id="spark-svg" width="100%" height="80" viewBox="0 0 400 80" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('hamisi',this)">Hamısı</button>
+    <button class="filter-btn" onclick="setFilter('obvious_no',this)">Obvious NO</button>
+    <button class="filter-btn" onclick="setFilter('arbitraj',this)">Arbitraj</button>
+    <span class="count-label" id="count-label">0 nəticə</span>
+  </div>
+
+  <div class="table">
+    <div class="table-head">
+      <span style="text-align:left">Bazar</span>
+      <span>YES</span><span>NO</span><span>Fərq</span><span>Növ</span><span>Həcm</span>
+    </div>
+    <div id="table-body"><div class="empty">Yüklənir...</div></div>
+  </div>
+
+  <div class="info-box">
+    <div class="info-label">NECƏ İŞLƏYİR</div>
+    <div class="info-text">
+      Bot hər 60 saniyədə Polymarket-i yoxlayır → dashboard hər 15 san yenilənir<br>
+      Obvious NO: YES &lt; 7% · Arbitraj: YES+NO cəmi $1-dən 4%+ az
+    </div>
+  </div>
+</div>
+
+<script>
+let currentFilter = 'hamisi';
+let allData = [];
+let history = [];
+
+function fmtVol(n) {
+  return n >= 1000000 ? '$'+(n/1e6).toFixed(1)+'M' : '$'+(n/1000).toFixed(0)+'K';
+}
+
+function drawPie(obvious, arbitraj) {
+  const svg = document.getElementById('pie-svg');
+  const cx=65, cy=65, r=56, ri=28;
+  const total = obvious + arbitraj || 1;
+  const data = [
+    { val: obvious,  color: '#22c55e', label: 'Obvious NO' },
+    { val: arbitraj, color: '#f59e0b', label: 'Arbitraj'   },
+  ];
+  let angle = -Math.PI / 2;
+  let slices = '';
+  data.forEach(d => {
+    const a = (d.val / total) * 2 * Math.PI || Math.PI;
+    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+    angle += a;
+    const x2 = cx + r * Math.cos(angle), y2 = cy + r * Math.sin(angle);
+    slices += `<path d="M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r},0,${a>Math.PI?1:0},1,${x2.toFixed(1)},${y2.toFixed(1)}Z" fill="${d.color}" opacity="0.85" stroke="#161b22" stroke-width="2"/>`;
+  });
+  svg.innerHTML = slices +
+    `<circle cx="${cx}" cy="${cy}" r="${ri}" fill="#161b22"/>` +
+    `<text x="${cx}" y="${cy-4}" text-anchor="middle" fill="#c9d1d9" font-size="13" font-weight="bold" font-family="monospace">${obvious+arbitraj}</text>` +
+    `<text x="${cx}" y="${cy+10}" text-anchor="middle" fill="#8b949e" font-size="9" font-family="monospace">furset</text>`;
+  document.getElementById('pie-legend').innerHTML = data.map(d =>
+    `<div class="legend-row"><div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:${d.color}"></div><span class="legend-name">${d.label}</span></div><span class="legend-val">${d.val}</span></div>`
+  ).join('');
+}
+
+function drawSpark(hist) {
+  const svg = document.getElementById('spark-svg');
+  if (hist.length < 2) { svg.innerHTML = ''; return; }
+  const w=400, h=80;
+  const mn=Math.min(...hist), mx=Math.max(...hist), range=mx-mn||1;
+  const pts = hist.map((v,i) =>
+    `${((i/(hist.length-1))*w).toFixed(1)},${(h-4-((v-mn)/range)*(h-8)).toFixed(1)}`
+  ).join(' ');
+  const lx = w, ly = (h-4-((hist[hist.length-1]-mn)/range)*(h-8)).toFixed(1);
+  svg.innerHTML =
+    `<polyline points="${pts}" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` +
+    `<circle cx="${lx}" cy="${ly}" r="3" fill="#22c55e"/>`;
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  const filtered = allData.filter(f => currentFilter === 'hamisi' ? true : f.nov === currentFilter);
+  document.getElementById('count-label').textContent = filtered.length + ' nəticə';
+  const body = document.getElementById('table-body');
+  if (!filtered.length) {
+    body.innerHTML = '<div class="empty">Hal-hazırda fürsət yoxdur. Bot izləyir...</div>';
+    return;
+  }
+  body.innerHTML = filtered.map((f,i) => {
+    const nc = f.nov === 'obvious_no' ? '#22c55e' : '#f59e0b';
+    const fc = f.ferq >= 0 ? '#22c55e' : '#ef4444';
+    return `<div class="table-row ${i%2===1?'alt':''}">
+      <div class="sual">${f.sual}</div>
+      <div class="mono" style="color:#3b82f6">${f.yes.toFixed(3)}</div>
+      <div class="mono" style="color:#8b949e">${f.no.toFixed(3)}</div>
+      <div class="mono" style="color:${fc};font-weight:bold">${f.ferq>=0?'+':''}${f.ferq.toFixed(3)}</div>
+      <div style="text-align:right"><span class="nov-badge" style="background:${nc}18;color:${nc}">${f.nov==='obvious_no'?'OBV NO':'ARB'}</span></div>
+      <div class="mono" style="color:#8b949e">${fmtVol(f.hacim)}</div>
+    </div>`;
+  }).join('');
+}
+
+function loadData() {
+  fetch('/data.json?t=' + Date.now())
+    .then(r => r.json())
+    .then(d => {
+      allData = d.fusretler || [];
+      const obvious  = allData.filter(f => f.nov === 'obvious_no').length;
+      const arbitraj = allData.filter(f => f.nov === 'arbitraj').length;
+      document.getElementById('son-scan').textContent      = d.son_scan || '--:--';
+      document.getElementById('scan-sayi').textContent     = d.scan_sayi || 0;
+      document.getElementById('obvious-sayi').textContent  = obvious;
+      document.getElementById('arbitraj-sayi').textContent = arbitraj;
+      document.getElementById('status-dot').className      = 'dot canli';
+      document.getElementById('status-text').textContent   = 'Canlı';
+      document.getElementById('status-text').style.color   = '#22c55e';
+      history.push(allData.length);
+      if (history.length > 20) history.shift();
+      drawPie(obvious, arbitraj);
+      drawSpark(history);
+      renderTable();
+    })
+    .catch(() => {
+      document.getElementById('status-dot').className    = 'dot xeta';
+      document.getElementById('status-text').textContent = 'Xəta';
+      document.getElementById('status-text').style.color = '#ef4444';
+    });
+}
+
+loadData();
+setInterval(loadData, 15000);
+</script>
+</body>
+</html>
