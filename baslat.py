@@ -5,7 +5,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 TOKEN     = os.environ.get("TELEGRAM_TOKEN", "")
 CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")
 PORT      = int(os.environ.get("PORT", 8080))
-DATA_FILE = "data.json"
 
 data_store = {
     "son_scan": "--:--:--",
@@ -28,16 +27,15 @@ def telegram(metn):
 
 def scan(scan_sayi):
     zaman = datetime.now().strftime("%H:%M:%S")
-    print(f"\nBOTRA | {zaman}")
+    print(f"BOTRA | {zaman}", flush=True)
     try:
         r = requests.get("https://gamma-api.polymarket.com/markets",
             params={"active":"true","closed":"false","limit":"100","order":"volume24hr"},
             timeout=10)
         bazarlar = r.json()
     except Exception as e:
-        print(f"Bazar xetasi: {e}")
+        print(f"Xeta: {e}", flush=True)
         return
-
     fusretler = []
     for b in bazarlar:
         try:
@@ -59,64 +57,50 @@ def scan(scan_sayi):
                 })
         except:
             continue
-
     fusretler = sorted(fusretler, key=lambda x: abs(x["ferq"]), reverse=True)
-    print(f"{len(fusretler)} furset tapildi")
-
-    data_store["son_scan"]    = zaman
-    data_store["scan_sayi"]   = scan_sayi
-    data_store["furset_sayi"] = len(fusretler)
-    data_store["fusretler"]   = fusretler[:20]
-
+    print(f"{len(fusretler)} furset", flush=True)
+    data_store.update({
+        "son_scan": zaman,
+        "scan_sayi": scan_sayi,
+        "furset_sayi": len(fusretler),
+        "fusretler": fusretler[:20]
+    })
     if fusretler:
         metn = f"BOTRA [{zaman}]\n{len(fusretler)} furset\n\n"
         for f in fusretler[:3]:
-            metn += f"{f['sual']}\nYES={f['yes']}  Nov={f['nov']}\n\n"
-        ok = telegram(metn)
-        print("Telegram OK!" if ok else "Telegram XETA!")
+            metn += f"{f['sual']}\nYES={f['yes']}\n\n"
+        telegram(metn)
+
+INDEX_HTML = open("index.html", "rb").read() if os.path.exists("index.html") else b"<h1>BOTRA</h1>"
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, format, *args):
+    def log_message(self, *args):
         pass
-
     def do_GET(self):
-        if self.path == "/data.json" or self.path.startswith("/data.json?"):
+        if self.path.startswith("/data.json"):
             body = json.dumps(data_store, ensure_ascii=False).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(body)
-        elif self.path == "/" or self.path == "/index.html":
-            try:
-                with open("index.html", "rb") as f:
-                    body = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html")
-                self.end_headers()
-                self.wfile.write(body)
-            except:
-                self.send_response(404)
-                self.end_headers()
         else:
-            self.send_response(404)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
             self.end_headers()
+            self.wfile.write(INDEX_HTML)
 
-def web_server():
-    server = HTTPServer(("0.0.0.0", PORT), Handler)
-    print(f"Web server port {PORT}-da ishleyir")
-    server.serve_forever()
+def web():
+    print(f"Server :{PORT}", flush=True)
+    HTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
 
-threading.Thread(target=web_server, daemon=True).start()
+threading.Thread(target=web, daemon=True).start()
 
-print("BOTRA ishleyir.\n")
 scan_sayi = 0
 while True:
     try:
         scan_sayi += 1
         scan(scan_sayi)
-        print("Novbeti scan 60 saniye sonra...")
         time.sleep(60)
     except KeyboardInterrupt:
-        print("\nDayandırildi.")
         break
