@@ -2,9 +2,9 @@ import json, time, requests, os, threading
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-TOKEN     = os.environ.get("TELEGRAM_TOKEN", "")
-CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")
-PORT      = int(os.environ.get("PORT", 8080))
+TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+PORT    = int(os.environ.get("PORT", 8080))
 
 data_store = {
     "son_scan": "--:--:--",
@@ -71,8 +71,6 @@ def scan(scan_sayi):
             metn += f"{f['sual']}\nYES={f['yes']}\n\n"
         telegram(metn)
 
-INDEX_HTML = open("index.html", "rb").read() if os.path.exists("index.html") else b"<h1>BOTRA</h1>"
-
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -85,10 +83,15 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         else:
+            try:
+                with open("index.html", "rb") as f:
+                    body = f.read()
+            except:
+                body = b"<h1>BOTRA</h1>"
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
             self.end_headers()
-            self.wfile.write(INDEX_HTML)
+            self.wfile.write(body)
 
 def web():
     print(f"Server :{PORT}", flush=True)
